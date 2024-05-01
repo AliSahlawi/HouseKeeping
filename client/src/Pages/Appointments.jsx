@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../components/Layout";
-import { getUserAppointments } from "../api/api";
+import { getUserAppointments,changeBookingStatus } from "../api/api";
 import { useDispatch } from "react-redux";
 import { hideLoading, showLoading } from "../redux/spinnerSlice";
+import toast from "react-hot-toast";
 import moment from "moment";
 import { Table } from "antd";
 
@@ -19,6 +20,19 @@ const Appointments = () => {
       dispatch(hideLoading());
     } catch (err) {
       dispatch(hideLoading());
+    }
+  };
+
+   //Change Booking  status
+   const handleBookingStatus = async (record, status) => {
+    try {
+      dispatch(showLoading());
+      const res = await changeBookingStatus(record._id, status);
+      toast.success(res.message);
+      dispatch(hideLoading());
+    } catch (err) {
+      dispatch(hideLoading());
+      toast.error(err.response.data.message);
     }
   };
 
@@ -65,6 +79,20 @@ const Appointments = () => {
     {
       title: "Status",
       dataIndex: "status",
+    },
+    {
+      title: "Actions",
+      dataIndex: "actions",
+      render: (text, record) => (
+        <div className="d-flex">
+          {record.status != "canceled" ? 
+            <button className="btn btn-danger" 
+            onClick={() => handleBookingStatus(record, "canceled")}
+            >Cancel Appointment.</button>
+            : <span></span>
+      }
+        </div>
+      ),
     },
   ];
 

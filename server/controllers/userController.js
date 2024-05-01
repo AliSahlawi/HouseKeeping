@@ -76,7 +76,7 @@ export const login = async (req, res, next) => {
     }
 
     //Check user is exist or not
-    const getUser = await UserModel.findOne({ email });
+    const getUser = await UserModel.findOne({ email: email.toLowerCase() });
     if (!getUser) {
       return res.status(404).json({
         message: "Invalid Credentials!",
@@ -367,6 +367,53 @@ export const userAppointments = async (req, res) => {
       data: appointments,
     });
   } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error!",
+      error: err.message,
+    });
+  }
+};
+
+//********* CHANGE Bookings STATUS  ********/
+export const changeBookingStatus = async (req, res) => {
+  try {
+    const { bookingId, status } = req.body;
+
+    const booking = await BookingModel.findByIdAndUpdate(bookingId, { status });
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found.",
+      });
+    }
+
+    const user = await UserModel.findOne({ _id: booking.userId });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const unSeenNotifications = user.unSeenNotifications;
+
+    //Push notification
+    unSeenNotifications.push({
+      type: "booking-status-request-updated",
+      message: `Your Booking has been ${status}.`,
+      onclickPath: "/notifications",
+    });
+  
+
+    //Success res
+    return res.status(201).json({
+      success: true,
+      message: "Booking status updated!",
+      data: booking,
+    });
+  } catch (err) {
+    console.log(err);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error!",

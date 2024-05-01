@@ -10,6 +10,7 @@ import {
   bookingAppointment,
   bookingAvailability,
   userAppointments,
+  changeBookingStatus
 } from "../controllers/userController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 
@@ -46,6 +47,9 @@ router.post("/booking-availability", authMiddleware, bookingAvailability);
 
 //Get appointments
 router.get("/user-appointments", authMiddleware, userAppointments);
+
+//Change Booking Status
+router.post("/changeBookingStatus", authMiddleware, changeBookingStatus);
 
 //export
 export default router;

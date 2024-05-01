@@ -1,5 +1,6 @@
 import DoctorModel from "../Models/DoctorModel.js";
 import UserModel from "../Models/UserModel.js";
+import BookingModel from "../Models/BookingModel.js";
 
 //************* GET ALL USER **********/
 export const getAllUser = async (req, res, next) => {
@@ -29,6 +30,26 @@ export const getAllDoctor = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       data: doctors,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error!",
+      error: err.message,
+    });
+  }
+};
+//**************** GET ALL Appointments *************/
+export const getAllAppointments = async (req, res, next) => {
+  try {
+    const bookings = await BookingModel.find({})
+    .populate("doctorInfo")
+    .populate("userInfo");
+
+    //Success Res
+    return res.status(200).json({
+      success: true,
+      data: bookings,
     });
   } catch (err) {
     return res.status(500).json({
@@ -85,3 +106,4 @@ export const changeAccountStatus = async (req, res) => {
     });
   }
 };
+

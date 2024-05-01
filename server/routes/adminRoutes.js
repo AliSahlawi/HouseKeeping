@@ -4,6 +4,7 @@ import {
   getAllUser,
   getAllDoctor,
   changeAccountStatus,
+  getAllAppointments,
 } from "../controllers/adminController.js";
 
 //Router Obj
@@ -15,8 +16,12 @@ router.get("/getAllUser", authMiddleware, getAllUser);
 //Get all Doctors
 router.get("/getAllDoctors", authMiddleware, getAllDoctor);
 
+//Get all Appointements
+router.get("/getAllAppointments", authMiddleware, getAllAppointments);
+
 //Account Status Change
 router.post("/changeAccountStatus", authMiddleware, changeAccountStatus);
+
 
 //Export
 export default router;

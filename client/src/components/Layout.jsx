@@ -69,6 +69,11 @@ const Layout = ({ children }) => {
       icon: "ri-user-star-line",
     },
     {
+      name: "Bookings",
+      path: "/admin/appointments",
+      icon: "ri-calendar-schedule-line",
+    },
+    {
       name: "Profile",
       path: "/profile",
       icon: "ri-profile-line",
