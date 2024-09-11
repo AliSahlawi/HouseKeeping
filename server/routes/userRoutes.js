@@ -3,14 +3,13 @@ import {
   register,
   login,
   getUserInfo,
-  applyDoctor,
   markAllNotificationsAsSeen,
   deleteAllSeenNotifications,
-  getAllApprovedDoctors,
+  getAllActiveWorkers,
   bookingAppointment,
   bookingAvailability,
-  userAppointments,
-  changeBookingStatus
+  changeBookingStatus,
+  changeContractStatus
 } from "../controllers/userController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 
@@ -27,17 +26,14 @@ router.post("/login", login);
 //Get user info (for protected routes)
 router.post("/get-user-info", authMiddleware, getUserInfo);
 
-//Apply Doctor (Doctor is now a user so the routes added in user routes)
-router.post("/apply-doctor", authMiddleware, applyDoctor);
-
 //Mark all notifications as seen
 router.post("/mark-all-notifications-as-seen", markAllNotificationsAsSeen);
 
 //Delete all seen notifications
 router.post("/delete-all-seen-notifications", deleteAllSeenNotifications);
 
-//Get all approved doctors
-router.get("/getAllApprovedDoctors", getAllApprovedDoctors);
+//Get all Active workers
+router.get("/getAllActiveWorkers", getAllActiveWorkers);
 
 //Book Appointment
 router.post("/book-appointment", authMiddleware, bookingAppointment);
@@ -45,11 +41,11 @@ router.post("/book-appointment", authMiddleware, bookingAppointment);
 //Booking availability
 router.post("/booking-availability", authMiddleware, bookingAvailability);
 
-//Get appointments
-router.get("/user-appointments", authMiddleware, userAppointments);
-
 //Change Booking Status
 router.post("/changeBookingStatus", authMiddleware, changeBookingStatus);
+
+//Change Booking Status
+router.post("/changeContractStatus", authMiddleware, changeContractStatus);
 
 //export
 export default router;

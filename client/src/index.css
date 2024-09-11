@@ -55,6 +55,25 @@
   animation: bounce 1.5s infinite ease-in-out;
 }
 
+.status-cell {
+  display: inline-block;
+  padding: 8px 12px; /* Adjust padding as needed */
+  border-radius: 4px; /* Adjust border-radius as needed */
+}
+
+.status-cell.canceled {
+  background-color: red;
+}
+
+.status-cell.approved {
+  background-color: green;
+}
+/* Custom CSS */
+.ant-picker-calendar-date {
+  height: 50px; /* Adjust the height as needed */
+  line-height: 30px; /* Center the content vertically */
+  font-size: 10px; /* Adjust the font size */
+}
 /* Custom animation to make the loader bounce */
 @keyframes bounce {
   0%,

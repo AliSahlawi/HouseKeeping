@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const bookingSchema = new mongoose.Schema(
+const contractSchema = new mongoose.Schema(
   {
     customerId: {
       type: String,
@@ -20,30 +20,17 @@ const bookingSchema = new mongoose.Schema(
       required: true,
       ref: "Customer",
     },
-    date: {
-      type: Array,
+    endDate: {
+      type: String,
       required: true,
     },
     status: {
       type: String,
       required: true,
-      default: "approved",
+      default: "active",
     },
-    time: {
-      type: Array,
-      required: true,
-    },
-    price: {
-      type: Number,
-      required: true,
-    },
-    contractId:{
-      type: String,
-      required: false,
-      default: undefined
-    }
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Booking", bookingSchema);
+export default mongoose.model("Contract", contractSchema);

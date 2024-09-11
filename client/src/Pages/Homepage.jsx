@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { getAllApprovedDoctors } from "../api/api";
+import { getAllActiveWorkers } from "../api/adminApi";
 import Layout from "../components/Layout";
 import { useDispatch } from "react-redux";
 import { hideLoading, showLoading } from "../redux/spinnerSlice";
 import { Row } from "antd";
-import DoctorList from "../components/DoctorList";
+import DoctorList from "../components/WorkerList";
 
 const Homepage = () => {
-  const [doctors, setDoctors] = useState([]);
+  const [workers, setWorkers] = useState([]);
   const dispatch = useDispatch();
 
   //Get all approved doctors
-  const fetchAllApprovedDoctors = async () => {
+  const fetchAllActiveWorkers = async () => {
     try {
       dispatch(showLoading());
-      const response = await getAllApprovedDoctors();
-      setDoctors(response.data);
+      const response = await getAllActiveWorkers();
+      setWorkers(response.data);
       dispatch(hideLoading());
     } catch (err) {
       dispatch(hideLoading());
@@ -24,14 +24,14 @@ const Homepage = () => {
   };
 
   useEffect(() => {
-    fetchAllApprovedDoctors();
+    fetchAllActiveWorkers();
   }, []);
   return (
     <>
       <Layout>
-        <h1 className="text-center mb-3">Doctors List</h1>
+        <h1 className="text-center mb-3">Workers List</h1>
         <Row>
-          {doctors && doctors.map((doctor) => <DoctorList key={doctor._id} doctor={doctor} />)}
+          {workers && workers.map((worker) => <DoctorList key={worker._id} worker={worker} />)}
         </Row>
       </Layout>
     </>

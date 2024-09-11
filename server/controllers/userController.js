@@ -1,9 +1,12 @@
 import UserModel from "../Models/UserModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import DoctorModel from "../Models/DoctorModel.js";
+import WorkerModel from "../Models/WorkerModel.js";
 import BookingModel from "../Models/BookingModel.js";
+import CustomerModel from "../Models/CustomerModel.js";
+import { checkOverallAvailability, createContract, createBookings } from "../services/BookingService.js"
 import moment from "moment";
+import ContractModel from "../Models/ContractModel.js";
 
 export const register = async (req, res, next) => {
   try {
@@ -139,42 +142,6 @@ export const getUserInfo = async (req, res, next) => {
   }
 };
 
-//************* APPLY DOCTOR ACCOUNT **************/
-export const applyDoctor = async (req, res, next) => {
-  try {
-    //Add doctor
-    const newDoctor = new DoctorModel(req.body);
-    await newDoctor.save();
-
-    //Get user (Admin)
-    const getAdmin = await UserModel.findOne({ isAdmin: true });
-
-    //Push notification to admin
-    const unSeenNotifications = getAdmin.unSeenNotifications;
-    unSeenNotifications.push({
-      type: "new-doctor-request",
-      message: `${newDoctor.firstName} ${newDoctor.lastName} has applied for a doctor account!`,
-      data: {
-        doctorId: newDoctor._id,
-        name: newDoctor.firstName + " " + newDoctor.lastName,
-      },
-      onClickPath: "/admin/doctors",
-    });
-    await UserModel.findByIdAndUpdate(getAdmin._id, { unSeenNotifications });
-
-    //Response
-    return res.status(201).json({
-      message: "Doctor Account Applied Successfully!",
-      success: true,
-    });
-  } catch (err) {
-    return res.status(500).json({
-      message: "Internal Server Error!",
-      success: false,
-      error: err.message,
-    });
-  }
-};
 
 //************ MARK ALL NOTIFICATIONS AS SEEN *******************/
 export const markAllNotificationsAsSeen = async (req, res, next) => {
@@ -231,22 +198,22 @@ export const deleteAllSeenNotifications = async (req, res, next) => {
   }
 };
 
-//************** GET ALL APPROVED DOCTORS ***********/
-export const getAllApprovedDoctors = async (req, res) => {
+//************** GET ALL Active WORKERS ***********/
+export const getAllActiveWorkers = async (req, res) => {
   try {
-    const doctors = await DoctorModel.find({ status: "approved" });
-    if (!doctors) {
+    const workers = await WorkerModel.find({ isActive: true });
+    if (!workers) {
       return res.status(404).json({
         success: false,
-        message: "Doctor not found.",
+        message: "Worker not found.",
       });
     }
 
     //success res
     return res.status(200).json({
       success: true,
-      message: "Doctor list fetched successfully!",
-      data: doctors,
+      message: "Workers list fetched successfully!",
+      data: workers,
     });
   } catch (err) {
     return res.status(500).json({
@@ -260,9 +227,10 @@ export const getAllApprovedDoctors = async (req, res) => {
 //************** BOOK APPOINTMENTS ***********/
 export const bookingAppointment = async (req, res) => {
   try {
-    //Get data
-    let { doctorId, userId, doctorInfo, userInfo, date, time, status } =
-      req.body;
+    // Extract data from request body
+    const { workerId, customerId, workerInfo, date, time, status, numberOfHours, endDate } = req.body;
+
+    // Validate required fields
     if (!date || !time) {
       return res.status(422).json({
         success: false,
@@ -270,31 +238,29 @@ export const bookingAppointment = async (req, res) => {
       });
     }
 
-    //Change date and time to ISO String (Used for convert date object to string obj) for check availability
-    date = moment(date, "DD-MM-YYYY").toISOString();
-    time = moment(time, "HH:mm").toISOString();
-    status = "pending";
+    // Convert time to ISO format
+    const startTime = moment(time, "HH:mm").toISOString();
+    const endTime = moment(time, "HH:mm").add(numberOfHours, 'hours').toISOString();
 
-    //Add bookings
-    const newBookings = new BookingModel({
-      doctorId,
-      userId,
-      doctorInfo,
-      userInfo,
-      date,
-      time,
-      status,
-    });
-    await newBookings.save();
+    // Convert dates to ISO format
+    const convertedDates = date.map(dateStr => moment(dateStr, "DD-MM-YYYY").toISOString());
 
-    //Push notification to user
-    const user = await UserModel.findOne({ _id: req.body.doctorInfo.userId });
-    user.unSeenNotifications.push({
-      type: "New-Booking-Request",
-      message: `A new appointment booking request from ${req.body.userInfo.name}`,
-      onClickPath: "/user/appointments",
-    });
-    await user.save();
+    // Calculate price
+    const price = workerInfo.feePerHour * numberOfHours;
+
+    // Find customer info
+    const customerInfo = await CustomerModel.findOne({ _id: customerId });
+
+    // Create contract if end date is provided
+    let contract;
+
+    if (endDate) {
+      const endDateString = moment(endDate, "DD-MM-YYYY").toISOString();
+      contract = await createContract(customerId, workerId, workerInfo, customerInfo, endDateString);
+    }
+
+    // Create and save bookings
+    await createBookings(workerId, customerId, workerInfo, customerInfo, convertedDates, startTime, endTime, price, contract);
 
     return res.status(200).json({
       success: true,
@@ -309,63 +275,47 @@ export const bookingAppointment = async (req, res) => {
   }
 };
 
+
+
+
 //************** BOOK AVAILABILITY ***********/
 export const bookingAvailability = async (req, res) => {
   try {
-    const { doctorId, date, time } = req.body;
-    const isoDate = moment(date, "DD-MM-YYYY").toISOString();
-    const isoTime = moment(time, "HH:mm").toISOString();
-    const fromTime = moment(isoTime).subtract(1, "hours").toISOString();
-    const toTime = moment(isoTime).add(1, "hours").toISOString();
+    const { workerId, dates, time, numberOfHours, endDate } = req.body;
 
-    const bookings = await BookingModel.find({
-      doctorId,
-      date: isoDate,
-      time: {
-        $gte: fromTime,
-        $lte: toTime,
-      },
-    });
+    let listOfDates = dates;
 
-    if (bookings.length > 0) {
+    // Handle contract days if endDate is provided
+    if (endDate) {
+      listOfDates = dates.flatMap(date => {
+        const startDate = moment(date, "DD-MM-YYYY");
+        const endContractDate = moment(endDate, "DD-MM-YYYY");
+        const datesInRange = [];
+
+        while (startDate <= endContractDate) {
+          datesInRange.push(startDate.format("DD-MM-YYYY"));
+          startDate.add(1, "week");
+        }
+
+        return datesInRange;
+      });
+    }
+
+    // Check availability for the dates
+    const unavailableDates = await checkOverallAvailability(workerId, listOfDates, time, numberOfHours, endDate);
+
+    if (unavailableDates.length === 0) {
       return res.status(200).json({
-        success: false,
-        message: "Appointment not available at this time",
+        success: true,
+        message: "All dates are available, you can book now!",
       });
     } else {
       return res.status(200).json({
-        success: true,
-        message: "Appointment available, you can book now!",
-      });
-    }
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error!",
-      error: err.message,
-    });
-  }
-};
-
-//************** GET USER APPOINTMENTS ***********/
-export const userAppointments = async (req, res) => {
-  try {
-    const appointments = await BookingModel.find({ userId: req.body.userId })
-      .populate("userInfo")
-      .populate("doctorInfo");
-    if (!appointments) {
-      return res.status(404).json({
         success: false,
-        message: "No appointments found!",
+        message: `Appointments not available for the following dates: ${unavailableDates.join(", ")}`,
+        unavailableDates: unavailableDates,
       });
     }
-
-    //Success res
-    return res.status(200).json({
-      success: true,
-      message: "User Appointments Fetched Successfully!",
-      data: appointments,
-    });
   } catch (err) {
     return res.status(500).json({
       success: false,
@@ -374,6 +324,8 @@ export const userAppointments = async (req, res) => {
     });
   }
 };
+
+
 
 //********* CHANGE Bookings STATUS  ********/
 export const changeBookingStatus = async (req, res) => {
@@ -388,29 +340,41 @@ export const changeBookingStatus = async (req, res) => {
       });
     }
 
-    const user = await UserModel.findOne({ _id: booking.userId });
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
-    }
-
-    const unSeenNotifications = user.unSeenNotifications;
-
-    //Push notification
-    unSeenNotifications.push({
-      type: "booking-status-request-updated",
-      message: `Your Booking has been ${status}.`,
-      onclickPath: "/notifications",
-    });
-  
-
     //Success res
     return res.status(201).json({
       success: true,
       message: "Booking status updated!",
       data: booking,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error!",
+      error: err.message,
+    });
+  }
+};
+
+
+//********* CHANGE Bookings STATUS  ********/
+export const changeContractStatus = async (req, res) => {
+  try {
+    const { contractId, status } = req.body;
+
+    const contract = await ContractModel.findByIdAndUpdate(contractId, { status });
+    if (!contract) {
+      return res.status(404).json({
+        success: false,
+        message: "Contract not found.",
+      });
+    }
+
+    //Success res
+    return res.status(201).json({
+      success: true,
+      message: "Contract status updated!",
+      data: contract,
     });
   } catch (err) {
     console.log(err);

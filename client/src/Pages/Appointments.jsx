@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../components/Layout";
-import { getUserAppointments,changeBookingStatus } from "../api/api";
+import { changeBookingStatus } from "../api/adminApi";
+import { getUserAppointments } from "../api/api"
 import { useDispatch } from "react-redux";
 import { hideLoading, showLoading } from "../redux/spinnerSlice";
 import toast from "react-hot-toast";

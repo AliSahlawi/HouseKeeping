@@ -1,6 +1,8 @@
-import DoctorModel from "../Models/DoctorModel.js";
 import UserModel from "../Models/UserModel.js";
 import BookingModel from "../Models/BookingModel.js";
+import WorkerModel from "../Models/WorkerModel.js";
+import CustomerModel from "../Models/CustomerModel.js";
+import ContractModel from "../Models/ContractModel.js";
 
 //************* GET ALL USER **********/
 export const getAllUser = async (req, res, next) => {
@@ -21,30 +23,12 @@ export const getAllUser = async (req, res, next) => {
   }
 };
 
-//**************** GET ALL DOCTORS *************/
-export const getAllDoctor = async (req, res, next) => {
-  try {
-    const doctors = await DoctorModel.find({});
-
-    //Success Res
-    return res.status(200).json({
-      success: true,
-      data: doctors,
-    });
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error!",
-      error: err.message,
-    });
-  }
-};
 //**************** GET ALL Appointments *************/
 export const getAllAppointments = async (req, res, next) => {
   try {
     const bookings = await BookingModel.find({})
-    .populate("doctorInfo")
-    .populate("userInfo");
+    .populate("workerInfo")
+    .populate("customerInfo");
 
     //Success Res
     return res.status(200).json({
@@ -59,44 +43,23 @@ export const getAllAppointments = async (req, res, next) => {
     });
   }
 };
-
-//********* CHANGE ACCOUNT STATUS (DOCTOR ACCOUNT) ********/
-export const changeAccountStatus = async (req, res) => {
+//************** GET worker BY ID *************/
+export const getWorkerById = async (req, res) => {
   try {
-    const { doctorId, status } = req.body;
-
-    const doctor = await DoctorModel.findByIdAndUpdate(doctorId, { status });
-    if (!doctor) {
+    const worker = await WorkerModel.findOne({ _id: req.body.workerId });
+    //Validation
+    if (!worker) {
       return res.status(404).json({
         success: false,
-        message: "Doctor not found.",
+        message: "worker not found.",
       });
     }
 
-    const user = await UserModel.findOne({ _id: doctor.userId });
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
-    }
-
-    const unSeenNotifications = user.unSeenNotifications;
-
-    //Push notification
-    unSeenNotifications.push({
-      type: "doctor-account-request-updated",
-      message: `Your doctor account request has ${status}.`,
-      onclickPath: "/notifications",
-    });
-    user.isDoctor = status === "approved" ? true : false;
-    user.save();
-
-    //Success res
-    return res.status(201).json({
+    //success
+    return res.status(200).json({
       success: true,
-      message: "Account status updated!",
-      data: doctor,
+      message: "Worker get by id successfully!",
+      data: worker,
     });
   } catch (err) {
     return res.status(500).json({
@@ -106,4 +69,170 @@ export const changeAccountStatus = async (req, res) => {
     });
   }
 };
+//************** GET Appointment BY Contranct *************/
+export const getAppointmentByContract = async (req, res) => {
+  try {
+
+    const appointments = await BookingModel.find({ contractId: req.body.contractId })
+    .populate("workerInfo")
+    .populate("customerInfo");
+    //Validation
+    if (!appointments) {
+      return res.status(404).json({
+        success: false,
+        message: "appointments not found.",
+      });
+    }
+
+    //success
+    return res.status(200).json({
+      success: true,
+      message: "appointments get by Contract successfully!",
+      data: appointments,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error!",
+      error: err.message,
+    });
+  }
+};
+//************** GET Appointment In Range*************/
+export const getAppointmentInRange = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.body;
+
+    const appointments = await BookingModel.find({
+      date: { $gte: startDate, $lte: endDate }
+    })
+      .populate("workerInfo")
+      .populate("customerInfo");
+
+    // Validation
+    if (!appointments || appointments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No Appointments for this Period, Please Add Appointments to show."
+      });
+    }
+
+    // Success
+    return res.status(200).json({
+      success: true,
+      message: "Appointments retrieved successfully!",
+      data: appointments
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error!",
+      error: err.message
+    });
+  }
+};
+
+//**************** GET ALL Workers *************/
+export const getAllWorkers = async (req, res, next) => {
+  try {
+    const workers = await WorkerModel.find({});
+
+    //Success Res
+    return res.status(200).json({
+      success: true,
+      data: workers,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error!",
+      error: err.message,
+    });
+  }
+};
+//**************** GET ALL Customers *************/
+export const getAllCustomers = async (req, res, next) => {
+  try {
+    const customers = await CustomerModel.find({});
+
+    //Success Res
+    return res.status(200).json({
+      success: true,
+      data: customers,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error!",
+      error: err.message,
+    });
+  }
+};
+//**************** GET ALL Contracts *************/
+export const getAllContracts = async (req, res, next) => {
+  try {
+    const contracts = await ContractModel.find({})
+    .populate("workerInfo")
+    .populate("customerInfo");
+
+    //Success Res
+    return res.status(200).json({
+      success: true,
+      data: contracts,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error!",
+      error: err.message,
+    });
+  }
+};
+
+
+//**************** Add New Worker *************/
+export const addWorker = async (req, res, next) => {
+  try {
+        //Add worker
+        const newWorker = new WorkerModel(req.body);
+        await newWorker.save();
+      
+    
+        //Response
+        return res.status(201).json({
+          message: "Worker has been added Successfully!",
+          success: true,
+        });
+      } catch (err) {
+        console.log(err)
+        return res.status(500).json({
+          message: "Internal Server Error!",
+          success: false,
+          error: err.message,
+        });
+      }
+  };
+//**************** Add New Customer *************/
+export const addCustomer = async (req, res, next) => {
+  try {
+        //Add customer
+        const newCustomer = new CustomerModel(req.body);
+        await newCustomer.save();
+    
+
+    
+        //Response
+        return res.status(201).json({
+          message: "Customer has been added Successfully!",
+          success: true,
+        });
+      } catch (err) {
+        console.log(err)
+        return res.status(500).json({
+          message: "Internal Server Error!",
+          success: false,
+          error: err.message,
+        });
+      }
+  };
 

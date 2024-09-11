@@ -1,25 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout";
-import { changeBookingStatus, getAllAppointments, getAppointmentsByContract } from "../../api/adminApi";
+import { changeContractStatus, getAllContracts } from "../../api/adminApi";
 import { Table } from 'antd';
 import { useDispatch } from "react-redux";
 import { hideLoading, showLoading } from "../../redux/spinnerSlice";
 import toast from "react-hot-toast";
-const AllAppointments = () => {
+const Contracts = () => {
+  const navigate = useNavigate();
+  
 
-  const params = useParams();
-
-    const [appointments, setAppointments] = useState([]);
+    const [contracts, setContracts] = useState([]);
     const dispatch = useDispatch();
 
 
 // Extract unique customer values
-const uniqueCustomers = [...new Set(appointments.map(record => record.customerInfo._id))];
+const uniqueCustomers = [...new Set(contracts.map(record => record.customerInfo._id))];
 
 // Create filter options
 const customerFilters = uniqueCustomers.map(customerId => {
-  const customer = appointments.find(record => record.customerInfo._id === customerId).customerInfo;
+  const customer = contracts.find(record => record.customerInfo._id === customerId).customerInfo;
   return {
     text: `${customer.firstName} ${customer.lastName}`,
     value: customerId
@@ -27,11 +27,11 @@ const customerFilters = uniqueCustomers.map(customerId => {
 });
 
 // Extract unique worker IDs
-const uniqueWorkers = [...new Set(appointments.map(record => record.workerInfo._id))];
+const uniqueWorkers = [...new Set(contracts.map(record => record.workerInfo._id))];
 
 // Create filter options
 const workerFilters = uniqueWorkers.map(workerId => {
-  const worker = appointments.find(record => record.workerInfo._id === workerId).workerInfo;
+  const worker = contracts.find(record => record.workerInfo._id === workerId).workerInfo;
   return {
     text: `${worker.firstName} ${worker.lastName}`,
     value: workerId
@@ -39,46 +39,29 @@ const workerFilters = uniqueWorkers.map(workerId => {
 });
 
     //Fetch all Appointments req
-    const fetchAllAppointments = async () => {
+    const fetchAllContracts = async () => {
       try {
         dispatch(showLoading());
-        const res = await getAllAppointments();
+        const res = await getAllContracts();
         dispatch(hideLoading());
   
         if (res.success) {
-          setAppointments(res.data);
+          setContracts(res.data);
         }
       } catch (err) {
         dispatch(hideLoading());
         console.log(err);
       }
     };
-        //Fetch all Appointments req
-        const fetchAppointmentsByContract = async () => {
-          try {
-            const contractId = params.contractId;
-            console.log(params.contractId);
-            dispatch(showLoading());
-            const res = await getAppointmentsByContract({ contractId: contractId});
-            dispatch(hideLoading());
-      
-            if (res.success) {
-              setAppointments(res.data);
-            }
-          } catch (err) {
-            dispatch(hideLoading());
-            console.log(err);
-          }
-        };
   
     //Change Booking  status
-    const handleBookingStatus = async (record, status) => {
+    const handleContractStatus = async (record, status) => {
       try {
         dispatch(showLoading());
-        const res = await changeBookingStatus(record._id, status);
+        const res = await changeContractStatus(record._id, status);
         if(res.success) {
-          const updatedAppointments = appointments.map( appointment => record._id === appointment._id ? { ...appointment, status } : appointment );
-          setAppointments(updatedAppointments);
+          const updatedContract = contracts.map( contract => record._id === contract._id ? { ...contract, status } : contract );
+          setContracts(updatedContract);
         }
         toast.success(res.message);
         dispatch(hideLoading());
@@ -89,12 +72,7 @@ const workerFilters = uniqueWorkers.map(workerId => {
     };
   
     useEffect(() => {
-      if(params.contractId != null){
-        fetchAppointmentsByContract();
-      }
-      else {
-      fetchAllAppointments();
-      }
+      fetchAllContracts();
     }, []);
   
     //Antd Table
@@ -102,7 +80,7 @@ const workerFilters = uniqueWorkers.map(workerId => {
       {
         title: 'Customer',
         dataIndex: 'customer',
-        render: (text, record) => <span>{record.customerInfo.firstName} {record.customerInfo.lastName}</span>,
+        render: (text, record) => <a onClick={() => navigate(`/admin/appointments/${record._id}`)}>{record.customerInfo.firstName} {record.customerInfo.lastName}</a>,
         filters: customerFilters,
         onFilter: (value, record) => record.customerInfo._id === value,
       },
@@ -128,24 +106,24 @@ const workerFilters = uniqueWorkers.map(workerId => {
         title: "Status",
         dataIndex: "status",
         render: (status) => (
-          <span className={`status-cell ${status === "canceled" ? "canceled" : "approved"}`}>
+          <span className={`status-cell ${status === "terminated" ? "canceled" : "approved"}`}>
             {status}
           </span>
         ),
       },
       {
-        title: 'Date',
-        dataIndex: 'date',
+        title: 'End Date',
+        dataIndex: 'endDate',
         sorter: (a, b) => new Date(a.date) - new Date(b.date),
         render: (date) => new Date(date).toLocaleDateString(),
       },
+      // {
+      //   title: "Time",
+      //   dataIndex: "time",
+      //   render: (time) => `${new Date(time[0]).toLocaleTimeString()} to ${new Date(time[1]).toLocaleTimeString()}`
+      // },
       {
-        title: "Time",
-        dataIndex: "time",
-        render: (time) => `${new Date(time[0]).toLocaleTimeString()} to ${new Date(time[1]).toLocaleTimeString()}`
-      },
-      {
-        title: "Price",
+        title: "",
         dataIndex: "price",
         render: (text, record) => <span>BHD {record.price}</span>,
       },
@@ -154,36 +132,17 @@ const workerFilters = uniqueWorkers.map(workerId => {
         dataIndex: "actions",
         render: (text, record) => (
           <div className="d-flex flex-column">
-  {record.status === "pending" && (
+  {record.status === "active" && (
     <>
       <div className="mb-2">
         <button 
           className="btn btn-danger" 
-          onClick={() => handleBookingStatus(record, "canceled")}
+          onClick={() => handleContractStatus(record, "terminated")}
         >
-          Cancel Appointment
-        </button>
-      </div>
-      <div>
-        <button
-          className="btn btn-success"
-          onClick={() => handleBookingStatus(record, "approved")}
-        >
-          Approve Appointment
+          Terminate Contract
         </button>
       </div>
     </>
-  )}
-
-  {record.status === "approved" && (
-    <div className="mb-2">
-      <button 
-        className="btn btn-danger" 
-        onClick={() => handleBookingStatus(record, "canceled")}
-      >
-        Cancel Appointment
-      </button>
-    </div>
   )}
 </div>
         ),
@@ -195,7 +154,7 @@ const workerFilters = uniqueWorkers.map(workerId => {
         <div className="table-responsive">
           <h1>All Appointments</h1>
           <Table
-            dataSource={appointments}
+            dataSource={contracts.filter(contract => contract.status !== "terminated")}
             columns={columns}
             rowKey={(record) => record._id}
             scroll={{ x: "max-content" }}
@@ -205,4 +164,4 @@ const workerFilters = uniqueWorkers.map(workerId => {
     );
   };
 
-export default AllAppointments
+export default Contracts

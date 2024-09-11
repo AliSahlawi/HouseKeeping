@@ -18,6 +18,10 @@ import Appointments from "./Pages/Appointments";
 import DoctorAppointments from "./Pages/doctor/DoctorAppointments";
 import UserProfile from "./Pages/UserProfile";
 import AdminAppointments from "./Pages/admin/AllAppointments";
+import Contracts from "./Pages/admin/Contracts";
+import AddWorker from "./Pages/admin/AddWorker";
+import AddCustomer from "./Pages/admin/AddCustomer";
+import OverView from "./Pages/admin/OverView";
 
 function App() {
   return (
@@ -59,10 +63,42 @@ function App() {
           }
         />
         <Route
-          path="/admin/appointments"
+          path="/admin/appointments/:contractId?"
           element={
             <ProtectedRoute>
               <AdminAppointments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/contracts"
+          element={
+            <ProtectedRoute>
+              <Contracts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/overview"
+          element={
+            <ProtectedRoute>
+              <OverView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/add-worker"
+          element={
+            <ProtectedRoute>
+              <AddWorker />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/add-customer"
+          element={
+            <ProtectedRoute>
+              <AddCustomer />
             </ProtectedRoute>
           }
         />
@@ -91,7 +127,7 @@ function App() {
           }
         />
         <Route
-          path="/doctor/book-appointment/:doctorId"
+          path="/worker/book-appointment/:workerId"
           element={
             <ProtectedRoute>
               <BookingPage />

@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const DoctorList = ({ doctor }) => {
+const WorkerList = ({ worker }) => {
   const navigate = useNavigate();
  
   return (
@@ -10,24 +10,18 @@ const DoctorList = ({ doctor }) => {
       <div className="card shadow">
         <div className="card-body">
           <h5 className="card-title text-primary mb-4">
-            Dr. {doctor.firstName} {doctor.lastName}
+           {worker.firstName} {worker.lastName}
           </h5>
           <ul className="list-group list-group-flush mb-4">
             <li className="list-group-item">
-              <span className="fw-bold">Specialization:</span> {doctor.specialization}
+              <span className="fw-bold">Timings:</span> {worker.timings[0]} - {worker.timings[1]}
             </li>
             <li className="list-group-item">
-              <span className="fw-bold">Experience:</span> {doctor.experience}
-            </li>
-            <li className="list-group-item">
-              <span className="fw-bold">Timings:</span> {doctor.timings[0]} - {doctor.timings[1]}
-            </li>
-            <li className="list-group-item">
-              <span className="fw-bold">Fee Per Consultation:</span> {doctor.feePerConsultation}
+              <span className="fw-bold">Fee Per Hour:</span> BHD {worker.feePerHour}
             </li>
           </ul>
           <button
-            onClick={() => navigate(`/doctor/book-appointment/${doctor._id}`)}
+            onClick={() => navigate(`/worker/book-appointment/${worker._id}`)}
             className="btn btn-primary w-100"
           >
             Book Appointment
@@ -40,4 +34,4 @@ const DoctorList = ({ doctor }) => {
   );
 };
 
-export default DoctorList;
+export default WorkerList;

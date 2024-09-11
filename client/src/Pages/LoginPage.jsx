@@ -1,8 +1,8 @@
 import React from "react";
 import { Form, Input, Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "../Assets/logo.png";
-import logLogo from "../Assets/log-logo.png";
+import logo from "../Assets/logo.jpeg";
+import logLogo from "../Assets/log-logo.jpeg";
 import toast from "react-hot-toast";
 import { loginUser } from "../api/api";
 import { useDispatch } from "react-redux";

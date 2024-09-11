@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./layout.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logo from "../Assets/logo.png";
+import logo from "../Assets/logo.jpeg";
 import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../redux/userSlice";
 import { Badge } from "antd";
@@ -59,18 +59,28 @@ const Layout = ({ children }) => {
       icon: "ri-home-2-line",
     },
     {
-      name: "Users",
-      path: "/admin/users",
-      icon: "ri-user-line",
+      name: "OverView",
+      path: "/admin/overview",
+      icon: "ri-home-2-line",
     },
     {
-      name: "Doctors",
-      path: "/admin/doctors",
+      name: "Add Worker",
+      path: "/admin/add-worker",
+      icon: "ri-user-star-line",
+    },
+    {
+      name: "Add Customer",
+      path: "/admin/add-customer",
       icon: "ri-user-star-line",
     },
     {
       name: "Bookings",
       path: "/admin/appointments",
+      icon: "ri-calendar-schedule-line",
+    },
+    {
+      name: "Contracts",
+      path: "/admin/contracts",
       icon: "ri-calendar-schedule-line",
     },
     {

@@ -1,8 +1,8 @@
 import React from "react";
 import { Form, Input, Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "../Assets/logo.png";
-import regLogo from "../Assets/reg-logo.png";
+import logo from "../Assets/logo.jpeg";
+import regLogo from "../Assets/reg-logo.jpeg";
 import { registerUser } from "../api/api";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
