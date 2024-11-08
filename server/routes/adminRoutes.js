@@ -9,7 +9,8 @@ import {
   addCustomer,
   getWorkerById,
   getAppointmentByContract,
-  getAppointmentInRange
+  getAppointmentInRange,
+  getPriceForContract
 } from "../controllers/adminController.js";
 
 //Router Obj
@@ -41,6 +42,8 @@ router.post("/getAppointmentByContract", getAppointmentByContract);
 
 //Get Appointment By Contract
 router.post("/getAppointmentInRange", getAppointmentInRange);
+
+router.post("/getPriceForContract", getPriceForContract);
 
 
 //Export

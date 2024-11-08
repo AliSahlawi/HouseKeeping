@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout";
-import { changeContractStatus, getAllContracts } from "../../api/adminApi";
+import { changeContractStatus, getAllContracts, getPriceByContract } from "../../api/adminApi";
 import { Table } from 'antd';
 import { useDispatch } from "react-redux";
 import { hideLoading, showLoading } from "../../redux/spinnerSlice";
@@ -123,7 +123,7 @@ const workerFilters = uniqueWorkers.map(workerId => {
       //   render: (time) => `${new Date(time[0]).toLocaleTimeString()} to ${new Date(time[1]).toLocaleTimeString()}`
       // },
       {
-        title: "",
+        title: "Total Price",
         dataIndex: "price",
         render: (text, record) => <span>BHD {record.price}</span>,
       },
@@ -152,7 +152,7 @@ const workerFilters = uniqueWorkers.map(workerId => {
     return (
       <Layout>
         <div className="table-responsive">
-          <h1>All Appointments</h1>
+          <h1>All Contracts</h1>
           <Table
             dataSource={contracts.filter(contract => contract.status !== "terminated")}
             columns={columns}

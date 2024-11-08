@@ -98,6 +98,41 @@ export const getAppointmentByContract = async (req, res) => {
     });
   }
 };
+
+export const getPriceForContract = async (req, res) => {
+  try {
+
+    const appointments = await BookingModel.find({ contractId: req.body.contractId })
+    .populate("workerInfo")
+    .populate("customerInfo");
+    //Validation
+    if (!appointments) {
+      return res.status(404).json({
+        success: false,
+        message: "appointments not found.",
+      });
+    }
+
+    let price = 0;
+    appointments.forEach(appintment => {
+      if(appintment.status == "approved"){
+        price+= appintment.price;
+      }
+    });
+    //success
+    return res.status(200).json({
+      success: true,
+      message: "price get by Contract successfully!",
+      data: price,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error!",
+      error: err.message,
+    });
+  }
+};
 //************** GET Appointment In Range*************/
 export const getAppointmentInRange = async (req, res) => {
   try {
@@ -172,13 +207,36 @@ export const getAllCustomers = async (req, res, next) => {
 export const getAllContracts = async (req, res, next) => {
   try {
     const contracts = await ContractModel.find({})
-    .populate("workerInfo")
-    .populate("customerInfo");
+      .populate("workerInfo")
+      .populate("customerInfo");
 
-    //Success Res
+    console.log("getAllContracts");
+
+    // Use Promise.all with map to handle asynchronous operations properly
+    const updatedContracts = await Promise.all(contracts.map(async contract => {
+      const appointments = await BookingModel.find({ contractId: contract.contractId })
+        .populate("workerInfo")
+        .populate("customerInfo");
+
+      let price = 0;
+      appointments.forEach(appointment => {
+        if (appointment.status === "approved") {
+          price += appointment.price;
+        }
+      });
+
+      console.log("price for " + contract.id + " is " + price);
+      // Update contract with price
+      contract.price = price.toString();
+      return contract;
+    }));
+
+    console.log("finished calculating " + JSON.stringify(updatedContracts));
+
+    // Success Response
     return res.status(200).json({
       success: true,
-      data: contracts,
+      data: updatedContracts,
     });
   } catch (err) {
     return res.status(500).json({
@@ -188,6 +246,7 @@ export const getAllContracts = async (req, res, next) => {
     });
   }
 };
+
 
 
 //**************** Add New Worker *************/

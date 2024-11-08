@@ -29,6 +29,12 @@ const contractSchema = new mongoose.Schema(
       required: true,
       default: "active",
     },
+
+  price : {
+    type : String,
+    required: false,
+    default : null
+  }
   },
   { timestamps: true }
 );

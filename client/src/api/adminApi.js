@@ -110,6 +110,26 @@ export const getAllWorkers = async () => {
       throw err;
     }
   };
+  
+  export const getPriceByContract = async (contractId) => {
+    try {
+      const response = await axios.post("/admin/getPriceByContract", contractId, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (response.status === 200) {
+        const resData = await response.data;
+        return resData;
+      } else {
+        throw new Error("Unexcepted Error Occurred!");
+      }
+    } catch (err) {
+      throw err;
+    }
+  };
+
+
 
   // ********** GET ALL Activer WORKERS ***********/
 export const getAllActiveWorkers = async () => {
