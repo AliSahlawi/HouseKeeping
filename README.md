@@ -40,6 +40,19 @@ To run the project locally, follow these steps:
 
 4. Open [http://localhost:3000](http://localhost:3000) to view the app in your browser.
 
+5. save the script into a .bat file and run it 
+@echo off
+
+REM Navigate to server folder and start the server
+cd /d "C:\Users\Ali_Sahlawi\Desktop\ApexBooking-Health\server"
+start cmd /k "npm start"
+
+REM Navigate to client folder and start the client
+cd /d "C:\Users\Ali_Sahlawi\Desktop\ApexBooking-Health\client"
+start cmd /k "npm start"
+
+ 
+
 ## Contributing
 
 Contributions are welcome! If you'd like to contribute to ApexBooking Health, please follow these steps:
