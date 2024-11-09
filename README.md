@@ -21,7 +21,7 @@ To run the project locally, follow these steps:
 
 1. Clone the repository:
 
-    ```
+    
     git clone https://github.com/your-username/apex-booking.git
     ```
 
@@ -41,6 +41,8 @@ To run the project locally, follow these steps:
 4. Open [http://localhost:3000](http://localhost:3000) to view the app in your browser.
 
 5. save the script into a .bat file and run it 
+
+```
 @echo off
 
 REM Navigate to server folder and start the server
@@ -50,7 +52,7 @@ start cmd /k "npm start"
 REM Navigate to client folder and start the client
 cd /d "C:\Users\Ali_Sahlawi\Desktop\ApexBooking-Health\client"
 start cmd /k "npm start"
-
+```
  
 
 ## Contributing
